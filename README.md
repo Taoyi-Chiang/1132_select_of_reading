@@ -1,2 +1,4 @@
-# 1132-
-114年教學創新計畫：課群型，歷代文選及習作學生創作成果
+# 2025 Teaching Innovation Project of Courses
+## Student Works Exhibition
+Advisor: Dr. Kuo Yongchi
+Assistant: Chiang Taoyi

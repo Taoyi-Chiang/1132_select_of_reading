@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>學生作品展示</title>
+</head>
+<body>
+  <h1 id="title"></h1>
+  <div id="gallery"></div>
+  <button id="autoplayBtn">自動播放</button>
+  <script>
+    function getQueryVariable(name) {
+      let r = new RegExp("[?&]" + name + "=([^&#]*)").exec(window.location.search);
+      return r ? decodeURIComponent(r[1]) : null;
+    }
+    const sid = getQueryVariable('sid');
+    document.getElementById('title').innerText = "學生 " + sid + " 作品";
+    Promise.all([
+      fetch('mediaList.json').then(r => r.json()),
+      fetch('mapping.json').then(r => r.json())
+    ]).then(([mediaList, mapping]) => {
+      let student = mediaList.find(s => s.student_id == sid);
+      if (!student) { document.getElementById('gallery').innerText = "找不到學生"; return; }
+      let files = (student.media || []).map(m => mapping[m.file]).filter(Boolean);
+      let gallery = document.getElementById('gallery');
+      let idx = 0;
+      function show(i) {
+        if (gallery.firstChild) gallery.removeChild(gallery.firstChild);
+        let id = files[i];
+        let iframe = document.createElement('iframe');
+        iframe.src = `https://drive.google.com/file/d/${id}/preview`;
+        iframe.width = 400;
+        iframe.height = 300;
+        gallery.appendChild(iframe);
+      }
+      show(idx);
+      document.getElementById('autoplayBtn').onclick = function() {
+        idx = 0;
+        show(idx);
+        let interval = setInterval(() => {
+          idx++;
+          if (idx >= files.length) { clearInterval(interval); return; }
+          show(idx);
+        }, 2500);
+      }
+    });
+  </script>
+</body>
+</html>

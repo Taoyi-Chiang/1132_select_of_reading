@@ -2,86 +2,30 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>1132 學生多媒體作品展</title>
-  <style>
-    body { font-family: "Microsoft JhengHei", sans-serif; background: #fcf9f6; color: #563F2E; }
-    h1 { text-align: center; margin-top: 32px; }
-    .type-section { margin: 36px 0; }
-    .media-block { border:1px solid #eee; border-radius: 1em; margin: 18px; padding: 20px; background: #fff; display:inline-block; vertical-align:top; width:320px;}
-    .media-block h3 { font-size:1.2em; margin:0 0 10px 0; }
-    .media-block iframe, .media-block img, .media-block audio, .media-block video { margin: 8px 0; }
-    .media-block a { color: #206bc2; text-decoration: underline;}
-  </style>
+  <title>學生多媒體展首頁</title>
 </head>
 <body>
-  <h1>1132 學生多媒體作品展</h1>
-  <div id="gallery"></div>
+  <h1>學生多媒體展</h1>
+  <div id="studentList"></div>
   <script>
-    const typeNames = {
-      'slide': '簡報重製',
-      'audio': '音訊',
-      'video': '影片',
-      'game_links': '互動式媒體'
-    };
-
     Promise.all([
       fetch('mediaList.json').then(r => r.json()),
       fetch('mapping.json').then(r => r.json())
     ]).then(([mediaList, mapping]) => {
-      // 分類聚合
-      const typeSections = { slide: [], audio: [], video: [], game_links: [] };
+      let list = document.getElementById('studentList');
       mediaList.forEach(student => {
-        const sid = student.student_id;
-        if (student.media) {
-          student.media.forEach(media => {
-            if (media.type === 'slide') typeSections.slide.push({ ...media, sid });
-            if (media.type === 'audio') typeSections.audio.push({ ...media, sid });
-            if (media.type === 'video') typeSections.video.push({ ...media, sid });
-          });
+        let sid = student.student_id;
+        let block = document.createElement('div');
+        block.style = "border:1px solid #eee; margin:1em; padding:1em;";
+        let firstMedia = student.media && student.media[0];
+        block.innerHTML = `<b>學生 ${sid}</b><br>`;
+        if (firstMedia) {
+          let id = mapping[firstMedia.file];
+          block.innerHTML += `<iframe src="https://drive.google.com/file/d/${id}/preview" width="180" height="130"></iframe><br>`;
         }
-        if (student.game_links && student.game_links.length > 0) {
-          student.game_links.forEach(link => {
-            typeSections.game_links.push({ sid, url: link });
-          });
-        }
+        block.innerHTML += `<button onclick="location.href='student.html?sid=${sid}'">進入作品</button>`;
+        list.appendChild(block);
       });
-
-      let html = "";
-      Object.entries(typeSections).forEach(([type, list]) => {
-        if (!list.length) return;
-        html += `<div class="type-section"><h2>${typeNames[type]}</h2>`;
-        list.forEach(item => {
-          html += `<div class="media-block">`;
-          html += `<h3>學生 ${item.sid}</h3>`;
-          if (type === "slide") {
-            const id = mapping[item.file] || "";
-            if (id) {
-              html += `<iframe src="https://drive.google.com/file/d/${id}/preview" width="280" height="210"></iframe>`;
-            } else {
-              html += `無檔案`;
-            }
-          } else if (type === "audio") {
-            const id = mapping[item.file] || "";
-            if (id) {
-              html += `<iframe src="https://drive.google.com/file/d/${id}/preview" width="260" height="60"></iframe>`;
-            } else {
-              html += `無檔案`;
-            }
-          } else if (type === "video") {
-            const id = mapping[item.file] || "";
-            if (id) {
-              html += `<iframe src="https://drive.google.com/file/d/${id}/preview" width="280" height="210" allow="autoplay"></iframe>`;
-            } else {
-              html += `無檔案`;
-            }
-          } else if (type === "game_links") {
-            html += `<a href="${item.url}" target="_blank">互動作品連結</a>`;
-          }
-          html += `</div>`;
-        });
-        html += `</div>`;
-      });
-      document.getElementById('gallery').innerHTML = html;
     });
   </script>
 </body>

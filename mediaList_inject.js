@@ -1,4 +1,5 @@
-const mediaList = [
+// mediaList_inject.js
+window.mediaList = [
   {
     "student_id": "110101005",
     "name": null,

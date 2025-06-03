@@ -1,18 +1,74 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%; 
+  height: 100%;
   overflow: hidden;
-  background-color: transparent;
+  background: #000;
+  color: #fff;
+  position: relative;
 }
 
-canvas {
+/* 控制區本身放在畫面左上，並允許內容垂直排列 */
+#controls {
   position: absolute;
-  top: 0;
-  left: 0;
-  background-color: transparent !important;
+  top: 10px;
+  left: 10px;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  border-radius: 4px;
+  font-family: "Microsoft JhengHei", sans-serif;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;           /* 每行之間留 10px */
+  opacity: 0;          /* 初始隱藏 */
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  max-width: 300px;
+  word-break: keep-all;
 }
 
-img, video {
-  z-index: 5;
-  background-color: transparent;
+/* 顯示時才允許互動 */
+#controls.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 每一行（.control-row）內部，垂直置中、左右分開 */
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 讓 <p> 不強制換行，也有 margin */
+.control-row p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* 滑桿放大到 100% */
+#slider-row input[type="range"] {
+  width: 100%;
+}
+
+/* 數字輸入跟 Label 之間不要太擠 */
+#duration-row label {
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+/* 讓滑鼠靜止時隱藏游標 */
+body.hide-cursor {
+  cursor: none;
+}
+
+/* 當 controls visible 時，不隱藏游標 */
+#controls.visible ~ body {
+  cursor: auto;
+}
+#controls.visible, #controls.visible * {
+  cursor: auto;
 }

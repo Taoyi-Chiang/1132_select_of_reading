@@ -2,48 +2,41 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>多媒體展示系統（本地讀 JSON）</title>
-  <!-- 載入剛用 Python 產生的 mediaList_inject.js -->
-  <script src="mediaList_inject.js"></script>
-  <!-- 載入 p5.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script>
-  <link rel="stylesheet" href="p5.js/style.css" />
+  <title>多媒體展示系統</title>
 
+  <!-- ① 一定要最早載入把 mediaList 掛到 window 上 -->
+  <script src="mediaList_inject.js"></script>
+
+  <!-- ② 立刻確認是否正確掛到 window.mediaList -->
+  <script>
+    console.log(">>> 載入 mediaList_inject.js 後，window.mediaList =", window.mediaList);
+  </script>
+
+  <!-- ③ 載入 p5.js，確保全域有 p5 物件 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+
+  <!-- ④ 自訂 CSS，可留在 <head> 內 -->
+  <link rel="stylesheet" href="p5.js/style.css" />
   <style>
-    body { margin: 0; padding: 0; overflow: hidden; }
-    #fileInput {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 100;
-      background: rgba(255,255,255,0.8);
-      padding: 5px;
-      border-radius: 5px;
-    }
+    /* 你想要的 CSS … */
   </style>
 </head>
 <body>
-  <!-- 使用者必須先選取本機的 mediaList.json -->
-  <input type="file" id="fileInput" accept=".json" />
-
-  <!-- 控制區等照常放 -->
-  <div id="controls" style="display:none;">
-    <!-- 你的原本 controls 內容 -->
-    <div style="position:absolute; top:10px; left:10px; color:#fff;">
-      <p>點擊畫面：啟動背景音樂 + 媒體輪播</p>
-      <p>輪播完所有圖片後會自動插播影片</p>
+  <!-- ⑤ 這裡放一個遮罩或直接顯示 controls，都可以 -->
+  <div id="controls">
+    <div class="control-row" id="instruction">
+      <p>點擊畫面：啟動音訊與投影片輪播</p>
     </div>
-    <input type="range" id="imageSlider" min="0" max="0" value="0"
-           style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:80%; z-index:20;" />
-    <label for="durationInput" style="position:absolute; top:10px; right:140px; color:#fff; z-index:20;">
-      圖片毫秒數:
-    </label>
-    <input type="number" id="durationInput" value="3000" step="500"
-           style="position:absolute; top:10px; right:10px; width:120px; z-index:20;" />
+    <div class="control-row" id="slider-row">
+      <input type="range" id="imageSlider" min="0" max="0" value="0" />
+    </div>
+    <div class="control-row" id="duration-row">
+      <label for="durationInput">投影片毫秒數：</label>
+      <input type="number" id="durationInput" value="3000" step="500" />
+    </div>
   </div>
 
-  <!-- p5.js canvas 會插入在這裡 -->
+  <!-- ⑥ 最後再載入自己的 sketch.js -->
   <script src="p5.js/sketch.js"></script>
 </body>
 </html>

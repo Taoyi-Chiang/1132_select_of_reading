@@ -25,22 +25,31 @@
       let section = document.createElement('div');
       section.className = "student-block";
       section.innerHTML = `<h3>學生 ${sid}</h3>`;
-      // 展示第一個媒體做為縮圖
+      // 展示第一個媒體用iframe
       let mainMedia = student.media[0];
       if (mainMedia) {
-        let url = mapping[mainMedia.file];
-        if (mainMedia.type === 'slide') {
-          section.innerHTML += `<img src="${url}" width="200"><br>`;
-        } else if (mainMedia.type === 'video') {
-          section.innerHTML += `<video src="${url}" width="200" controls></video><br>`;
-        } else if (mainMedia.type === 'audio') {
-          section.innerHTML += `<audio src="${url}" controls></audio><br>`;
+        // 取 file id
+        let fileKey = mainMedia.file;
+        let fileId = mapping[fileKey + '_id'] || getIdFromUrl(mapping[fileKey]);
+        // 用iframe嵌入 Google Drive 預覽
+        if (fileId) {
+          let w = (mainMedia.type === 'audio') ? 320 : ((mainMedia.type === 'slide') ? 400 : 640);
+          let h = (mainMedia.type === 'audio') ? 60 : ((mainMedia.type === 'slide') ? 300 : 360);
+          section.innerHTML += `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay"></iframe><br>`;
+        } else {
+          section.innerHTML += '（無法預覽）<br>';
         }
       }
-      // 進入互動展示按鈕
+      // 互動按鈕
       section.innerHTML += `<a href="student_${sid}.html" target="_blank"><button>進入互動展示</button></a>`;
       container.appendChild(section);
     });
+
+    // 輔助function：從url取id
+    function getIdFromUrl(url) {
+      let m = url && url.match(/id=([^&]+)/);
+      return m ? m[1] : '';
+    }
   });
   </script>
 </body>

@@ -1,56 +1,28 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8" />
-  <title>多媒體學生作品展</title>
-  <style>
-    #start-show-btn {
-      font-size: 1.5em; padding: 1em 2em; background: #563F2E; color: #fff; border: none; border-radius: 1em; margin-bottom: 2em; cursor: pointer;
-    }
-    .student-block { border:1px solid #eee; margin:1em 0; padding:1em; border-radius:1em;}
-  </style>
-</head>
+<html>
 <body>
-  <h1>學生多媒體作品展</h1>
-  <button id="start-show-btn" onclick="location.href='show.html'">▶ 啟動現場自動播放</button>
   <div id="gallery"></div>
   <script>
-  Promise.all([
-    fetch('mediaList.json').then(r => r.json()),
-    fetch('mapping.json').then(r => r.json())
-  ]).then(([mediaList, mapping]) => {
-    let container = document.getElementById('gallery');
-    mediaList.forEach(student => {
-      let sid = student.student_id;
-      let section = document.createElement('div');
-      section.className = "student-block";
-      section.innerHTML = `<h3>學生 ${sid}</h3>`;
-      // 展示第一個媒體用iframe
-      let mainMedia = student.media[0];
-      if (mainMedia) {
-        // 取 file id
-        let fileKey = mainMedia.file;
-        let fileId = mapping[fileKey + '_id'] || getIdFromUrl(mapping[fileKey]);
-        // 用iframe嵌入 Google Drive 預覽
-        if (fileId) {
-          let w = (mainMedia.type === 'audio') ? 320 : ((mainMedia.type === 'slide') ? 400 : 640);
-          let h = (mainMedia.type === 'audio') ? 60 : ((mainMedia.type === 'slide') ? 300 : 360);
-          section.innerHTML += `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay"></iframe><br>`;
-        } else {
-          section.innerHTML += '（無法預覽）<br>';
-        }
-      }
-      // 互動按鈕
-      section.innerHTML += `<a href="student_${sid}.html" target="_blank"><button>進入互動展示</button></a>`;
-      container.appendChild(section);
+    Promise.all([
+      fetch('mediaList.json').then(r => r.json()),
+      fetch('mapping.json').then(r => r.json())
+    ]).then(([mediaList, mapping]) => {
+      let container = document.getElementById('gallery');
+      mediaList.forEach(student => {
+        let sid = student.student_id;
+        let section = document.createElement('div');
+        section.innerHTML = `<h3>學生 ${sid}</h3>`;
+        student.media.forEach(media => {
+          let id = mapping[media.file]; // mapping.json 要有 "filename": "fileId"
+          if (id) {
+            let w = (media.type === 'audio') ? 320 : 640;
+            let h = (media.type === 'audio') ? 60 : 360;
+            section.innerHTML += `<iframe src="https://drive.google.com/file/d/${id}/preview" width="${w}" height="${h}" allow="autoplay"></iframe><br>`;
+          }
+        });
+        container.appendChild(section);
+      });
     });
-
-    // 輔助function：從url取id
-    function getIdFromUrl(url) {
-      let m = url && url.match(/id=([^&]+)/);
-      return m ? m[1] : '';
-    }
-  });
   </script>
 </body>
 </html>

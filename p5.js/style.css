@@ -1,13 +1,10 @@
-/* style.css */
-
 html, body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: transparent;  /* 由黑變透明 */
+  background-color: transparent;
 }
 
-/* 讓 p5.js 的 canvas 也同樣透明 */
 canvas {
   position: absolute;
   top: 0;
@@ -15,8 +12,7 @@ canvas {
   background-color: transparent !important;
 }
 
-/* 若你使用 createImg/createVideo/createElement("iframe")，可以調整它們的 z-index */
-img, video, iframe {
-  z-index: 10;
-  object-fit: contain;
+img, video {
+  z-index: 5;
+  background-color: transparent;
 }

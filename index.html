@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>多媒體展示系統</title>
+
+  <!-- 載入 p5.js 與 p5.sound -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script>
+
+  <!-- 載入畫面用的 CSS（例如滑桿樣式） -->
+  <link rel="stylesheet" href="p5.js/style.css" />
+
+  <!-- 以下是這次要示範新增／修改的 CSS：-->
+  <style>
+    /*========== 控制區預設隱藏 ==========*/
+    #controls {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 20;
+      opacity: 0;                     /* 完全透明 */
+      pointer-events: none;           /* 隱藏時不攔截點擊 */
+      transition: opacity 0.3s ease;  /* 0.3 秒淡入淡出 */
+    }
+    /* 有 .visible class 時顯示 */
+    #controls.visible {
+      opacity: 1;
+      pointer-events: auto;           /* 顯示時才允許點擊或拖屬性 */
+    }
+
+    /*========== 滑鼠游標隱藏／顯示 ==========*/
+    body.hide-cursor {
+      cursor: none; /* 隱藏游標 */
+    }
+    /* 如果控制區正在顯示，也可讓游標保持不隱藏 */
+    #controls.visible ~ body {
+      cursor: auto;
+    }
+
+    /* 為了配合全螢幕操作，畫面中其他地方也不一定要出現游標 */
+    /* 當滑鼠在 controls 上時，游標自動顯示 */
+    #controls.visible, #controls.visible * {
+      cursor: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== 1. 所有提示文字、滑桿、輸入框都放到 #controls 裡 ========== -->
+  <div id="controls">
+    <!-- 提示文字 -->
+    <div style="position:absolute; top:10px; left:10px; color:#fff;">
+      <p>點擊畫面：啟動背景音樂 + 媒體輪播</p>
+      <p>輪播完所有圖片後會自動插播影片</p>
+    </div>
+
+    <!-- 滑桿：隱藏式，拖曳可直接跳到對應第幾張圖片 -->
+    <input type="range" id="imageSlider"
+           min="0" max="0" value="0"
+           style="
+             position: absolute;
+             bottom: 20px;
+             left: 50%;
+             transform: translateX(-50%);
+             width: 80%;
+             z-index: 20;
+           "
+    />
+
+    <!-- 圖片顯示時間(ms)輸入框 -->
+    <label for="durationInput"
+           style="position:absolute; top:10px; right:140px; color:#fff; z-index:20;">
+      圖片毫秒數:
+    </label>
+    <input type="number" id="durationInput" value="3000" step="500"
+           style="position:absolute; top:10px; right:10px; width:120px; z-index:20;"
+    />
+  </div>
+
+  <!-- p5.js canvas 會自動插入在這裡，不需要手動放 <canvas> 標籤 -->
+
+  <!-- 以下是控制「滑鼠靜置 1 秒後隱藏 controls 並隱藏游標」的 JavaScript -->
+  <script>
+    (function() {
+      const controls = document.getElementById('controls');
+      let hideTimer = null;
+
+      // 當滑鼠移動或觸控時，喚醒 controls，並啟動 1 秒後隱藏的計時
+      function showControls() {
+        // 先把 hideTimer 清掉（如果還沒到 1 秒就又移動，就重置）
+        if (hideTimer) clearTimeout(hideTimer);
+
+        // 把 controls 顯示（加上 visible class）、並顯示游標
+        controls.classList.add('visible');
+        document.body.classList.remove('hide-cursor');
+
+        // 1 秒後自動隱藏
+        hideTimer = setTimeout(() => {
+          controls.classList.remove('visible');
+          document.body.classList.add('hide-cursor');
+        }, 1000);
+      }
+
+      // 監聽滑鼠移動與觸控（如果是行動裝置）
+      window.addEventListener('mousemove', showControls);
+      window.addEventListener('touchstart', showControls);
+
+      // 一開始就先隱藏游標與 controls（過場才會淡入）
+      controls.classList.remove('visible');
+      document.body.classList.add('hide-cursor');
+    })();
+  </script>
+
+  <!-- 載入主要的 p5.js 程式 -->
+  <script src="p5.js/sketch.js"></script>
+</body>
+</html>

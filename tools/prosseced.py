@@ -6,25 +6,22 @@ from pathlib import Path
 from collections import defaultdict
 from pdf2image import convert_from_path
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from tqdm import tqdm  # 進度條工具
-from docx import Document   # 用來解析 .docx 內的超連結
+from tqdm import tqdm
+from docx import Document
 
 # === 全域參數與目錄設定 ===
 RAW_DIR    = Path("D:/1132_select_of_reading/data/raw")
 OUTPUT_DIR = Path("D:/1132_select_of_reading/data/processed")
-PDF_DPI    = 200  # 可酌量調低到 100 或 150
+PDF_DPI    = 100
 
-# 關鍵詞與副檔名
 game_keywords   = ['遊戲']
 audio_keywords  = ['歌唱', '口述', '說故事', 'podcast', '手繪動畫']
 audio_exts      = ['.mp3', '.m4a', '.wav']
 video_exts      = ['.mp4', '.mov']
 pdf_ext         = '.pdf'
 pptx_ext        = '.pptx'
-docx_ext        = '.docx'  # 用來擷取超連結
+docx_ext        = '.docx'
 
-# 抓 ① 純數字 8～9 位 OR ② Z + 7 位數字
-# (?<![A-Za-z0-9]) 確保前面不是英數字；(?![A-Za-z0-9]) 確保後面不是英數字
 student_id_pattern = re.compile(
     r'(?<![A-Za-z0-9])'
     r'(?:'
@@ -36,10 +33,6 @@ student_id_pattern = re.compile(
 )
 
 def extract_hyperlinks_from_docx(docx_path):
-    """
-    把 .docx 裡的所有超連結抽出來，回傳一個列表 (list of str)。
-    需要 python-docx 套件。
-    """
     links = []
     doc = Document(docx_path)
     rels = doc.part.rels
@@ -49,10 +42,6 @@ def extract_hyperlinks_from_docx(docx_path):
     return links
 
 def classify_files():
-    """
-    遍歷 RAW_DIR 下所有檔案，依學號分類到 student_data 字典中，
-    未匹配學號的檔案名稱放到 unmatched_files。
-    """
     student_data = defaultdict(lambda: {
         'pdf': [], 'pptx': [], 'game': [], 'audio': [], 'video': [], 'others': []
     })
@@ -90,11 +79,6 @@ def classify_files():
     return student_data, unmatched_files
 
 def convert_pdf_task(args):
-    """
-    平行子程序呼叫：把指定的 PDF 轉成一系列 PNG，並存到 OUTPUT_DIR/學號/ 裡。
-    args: (student_id, pdf_filename)
-    回傳 (student_id, slide_count or None, error_message or None)
-    """
     sid, pdf_name = args
     pdf_src = RAW_DIR / pdf_name
     stu_dir = OUTPUT_DIR / sid
@@ -112,40 +96,29 @@ def convert_pdf_task(args):
         return sid, None, f"{pdf_name} 轉檔失敗：{e}"
 
 def write_meta_json(student_data, slide_counts):
-    """
-    為每位學生生成一個包含所有媒體描述的 meta.json：
-    {
-      "student_id": "...",
-      "name": null,
-      "media": [ {...}, ... ],
-      "game_links": [ "...", ... ]
-    }
-    """
     for sid, data in tqdm(student_data.items(), desc="寫 meta.json"):
         stu_dir = OUTPUT_DIR / sid
         stu_dir.mkdir(exist_ok=True)
 
-        # 準備 JSON 物件雛型
         meta = {
             "student_id": sid,
-            "name": None,     # 若日後要加姓名可修改
+            "name": None,
             "media": [],
             "game_links": []
         }
 
-        # 1. 加入 slides (PNG)，依檔名排序
+        # 加入 slides
         png_files = sorted(stu_dir.glob(f"{sid}_*.png"))
         for png_path in png_files:
-            # 從檔名解析順序，例如 sid_001.png → order = 1
             order = int(png_path.stem.split("_")[-1])
             meta["media"].append({
                 "type": "slide",
                 "file": png_path.name,
                 "order": order,
-                "description": None  # 之後需要時可填
+                "description": None
             })
 
-        # 2. 加入 audio (若存在)
+        # 加入 audio
         audio_file = None
         for ext in audio_exts:
             candidate = stu_dir / f"audio{ext}"
@@ -160,7 +133,7 @@ def write_meta_json(student_data, slide_counts):
                 "volume": 0.7
             })
 
-        # 3. 加入 video (若存在)
+        # 加入 video
         video_file = None
         for ext in video_exts:
             candidate = stu_dir / f"video{ext}"
@@ -175,7 +148,7 @@ def write_meta_json(student_data, slide_counts):
                 "volume": 1.0
             })
 
-        # 4. 讀取 game_links/學號.txt，把每行 URL 加入 game_links
+        # 加入 game_links
         links_path = OUTPUT_DIR / "game_links" / f"{sid}.txt"
         if links_path.exists():
             with open(links_path, "r", encoding="utf-8") as f:
@@ -184,16 +157,12 @@ def write_meta_json(student_data, slide_counts):
                     if url:
                         meta["game_links"].append(url)
 
-        # 5. 如果至少有一種 media 或 game_links 不為空，就寫入 meta.json
         if meta["media"] or meta["game_links"]:
             meta_path = stu_dir / "meta.json"
             with open(meta_path, "w", encoding="utf-8") as f:
                 json.dump(meta, f, ensure_ascii=False, indent=2)
 
 def write_unmatched(unmatched_files):
-    """
-    將無法匹配學號的檔名寫到 unmatched_files.txt
-    """
     unmatched_path = OUTPUT_DIR / "unmatched_files.txt"
     if unmatched_files:
         with open(unmatched_path, "w", encoding="utf-8") as f:
@@ -205,10 +174,10 @@ def write_unmatched(unmatched_files):
         print("\n✅ 所有檔案皆已成功分類，無未匹配檔案。")
 
 if __name__ == "__main__":
-    # 1. 分類 raw 資料夾中的所有檔案
+    # 1. 分類 raw 資料夾
     student_data, unmatched_files = classify_files()
 
-    # 2. 平行轉所有需要轉成 PNG 的 PDF
+    # 2. 平行轉 PDF → PNG
     pdf_tasks   = [(sid, data['pdf'][0]) for sid, data in student_data.items() if data['pdf']]
     slide_counts = {}
     if pdf_tasks:
@@ -222,13 +191,11 @@ if __name__ == "__main__":
                 else:
                     slide_counts[sid] = count
 
-    # 確保每位學生都有一個 slide_count（即使沒有 PDF 也設 0）
     for sid in student_data.keys():
         if sid not in slide_counts:
             slide_counts[sid] = 0
 
-    # 3. 複製 audio、video、解析 .docx 超連結
-    #    將 URLs 寫到 game_links/學號.txt
+    # 3. 處理 game_links、複製 audio/video
     for sid, data in tqdm(student_data.items(), desc="處理遊戲連結"):
         if data['game']:
             links_txt = OUTPUT_DIR / "game_links" / f"{sid}.txt"
@@ -252,12 +219,10 @@ if __name__ == "__main__":
                 for line in all_urls:
                     f.write(line + "\n")
 
-    # 4. 複製 audio、video 檔案到各學生資料夾
     for sid, data in tqdm(student_data.items(), desc="複製音訊與影片"):
         stu_dir = OUTPUT_DIR / sid
         stu_dir.mkdir(exist_ok=True)
 
-        # 複製背景音樂 (Audio)，若該學生有 Video 就跳過
         if data['audio'] and not data['video']:
             audio_name = data['audio'][0]
             audio_src  = RAW_DIR / audio_name
@@ -267,7 +232,6 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"❌ 複製音訊檔失敗：{audio_src.name}，錯誤訊息：{e}")
 
-        # 複製主展示影片 (Video)
         if data['video']:
             video_name = data['video'][0]
             video_src  = RAW_DIR / video_name
@@ -277,10 +241,28 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"❌ 複製視訊檔失敗：{video_src.name}，錯誤訊息：{e}")
 
-    # 5. 寫入每位學生的 meta.json
+    # 4. 寫入每位學生的 meta.json
     write_meta_json(student_data, slide_counts)
 
-    # 6. 輸出 unmatched_files.txt
+    # 5. 輸出 unmatched_files.txt
     write_unmatched(unmatched_files)
 
-    print(f"\n✅ 處理完畢。請檢查資料夾：{OUTPUT_DIR.resolve()}")  
+    # 6. 合併所有學生的 meta.json
+    combined = []
+    processed_root = OUTPUT_DIR
+    for sid_dir in processed_root.iterdir():
+        if not sid_dir.is_dir():
+            continue
+        meta_path = sid_dir / "meta.json"
+        if meta_path.exists():
+            with open(meta_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            combined.append(data)
+
+    # 6. 寫 data/processed/mediaList.json
+    output_media_list = processed_root / "mediaList.json"
+    with open(output_media_list, "w", encoding="utf-8") as f:
+        json.dump(combined, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ 同步產生 mediaList：{output_media_list}")
+    print(f"\n✅ 處理完畢。請檢查資料夾：{OUTPUT_DIR.resolve()}")

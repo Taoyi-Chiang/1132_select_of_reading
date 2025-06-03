@@ -1,14 +1,14 @@
-import csv
 import json
+import re
 
-csv_path = r"D:\1132_select_of_reading\data\mapping.csv"
-mapping = {}
+with open("mapping.json", encoding="utf-8") as f:
+    mapping = json.load(f)
 
-with open(csv_path, newline='', encoding='utf-8') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-        key = row['filename']  # 或 f"{row['student_id']}/{row['filename']}"
-        mapping[key] = row['url']
+def extract_id(url):
+    m = re.search(r"id=([\w-]+)", url)
+    return m.group(1) if m else url
 
-with open('mapping.json', 'w', encoding='utf-8') as f:
-    json.dump(mapping, f, ensure_ascii=False, indent=2)
+fixed = {k: extract_id(v) for k, v in mapping.items()}
+
+with open("mapping.json", "w", encoding="utf-8") as f:
+    json.dump(fixed, f, ensure_ascii=False, indent=2)

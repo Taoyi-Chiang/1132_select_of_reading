@@ -3,40 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <title>多媒體展示系統</title>
-
-  <!-- ① 一定要最早載入把 mediaList 掛到 window 上 -->
+  <!-- 先載入 mediaList_inject.js，保證 window.mediaList 可以使用 -->
   <script src="mediaList_inject.js"></script>
-
-  <!-- ② 立刻確認是否正確掛到 window.mediaList -->
-  <script>
-    console.log(">>> 載入 mediaList_inject.js 後，window.mediaList =", window.mediaList);
-  </script>
-
-  <!-- ③ 載入 p5.js，確保全域有 p5 物件 -->
+  <!-- 再載 p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
-
-  <!-- ④ 自訂 CSS，可留在 <head> 內 -->
+  <!-- 你的 CSS… -->
   <link rel="stylesheet" href="p5.js/style.css" />
-  <style>
-    /* 你想要的 CSS … */
-  </style>
 </head>
 <body>
-  <!-- ⑤ 這裡放一個遮罩或直接顯示 controls，都可以 -->
-  <div id="controls">
-    <div class="control-row" id="instruction">
-      <p>點擊畫面：啟動音訊與投影片輪播</p>
-    </div>
-    <div class="control-row" id="slider-row">
-      <input type="range" id="imageSlider" min="0" max="0" value="0" />
-    </div>
-    <div class="control-row" id="duration-row">
-      <label for="durationInput">投影片毫秒數：</label>
-      <input type="number" id="durationInput" value="3000" step="500" />
-    </div>
+  <!-- 1. 先讓使用者選擇要播放的影片檔（可多選） -->
+  <div id="file-selector"
+       style="position:absolute; top:10px; left:10px; z-index:50;
+              background:rgba(0,0,0,0.6); padding:8px; border-radius:4px; color:#fff;">
+    <p>請選擇要播放的影片檔（可多選）：</p>
+    <input type="file" id="videoFilesInput" accept="video/*" multiple />
+    <p style="font-size:12px; opacity:0.8; margin-top:4px;">
+      （請一次選入 112101017/video.mp4 與 112101522/video.mp4）
+    </p>
   </div>
 
-  <!-- ⑥ 最後再載入自己的 sketch.js -->
+  <!-- 2. 你的 controls 區塊（如果有需要，可自行新增），此處可留空或放其他 UI -->
+  <div id="controls"></div>
+
+  <!-- 3. 最後載入上面更新過的 sketch.js -->
   <script src="p5.js/sketch.js"></script>
 </body>
 </html>

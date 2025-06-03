@@ -1,4 +1,4 @@
-[
+const mediaList = [
   {
     "student_id": "110101005",
     "name": null,
@@ -3907,4 +3907,4 @@
     ],
     "game_links": []
   }
-]
+];

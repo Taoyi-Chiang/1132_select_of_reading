@@ -2,31 +2,48 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>學生多媒體展首頁</title>
+  <title>多媒體展示系統（本地讀 JSON）</title>
+  <!-- 載入剛用 Python 產生的 mediaList_inject.js -->
+  <script src="mediaList_inject.js"></script>
+  <!-- 載入 p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script>
+  <link rel="stylesheet" href="p5.js/style.css" />
+
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; }
+    #fileInput {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 100;
+      background: rgba(255,255,255,0.8);
+      padding: 5px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-  <h1>學生多媒體展</h1>
-  <div id="studentList"></div>
-  <script>
-    Promise.all([
-      fetch('mediaList.json').then(r => r.json()),
-      fetch('mapping.json').then(r => r.json())
-    ]).then(([mediaList, mapping]) => {
-      let list = document.getElementById('studentList');
-      mediaList.forEach(student => {
-        let sid = student.student_id;
-        let block = document.createElement('div');
-        block.style = "border:1px solid #eee; margin:1em; padding:1em;";
-        let firstMedia = student.media && student.media[0];
-        block.innerHTML = `<b>學生 ${sid}</b><br>`;
-        if (firstMedia) {
-          let id = mapping[firstMedia.file];
-          block.innerHTML += `<iframe src="https://drive.google.com/file/d/${id}/preview" width="180" height="130"></iframe><br>`;
-        }
-        block.innerHTML += `<button onclick="location.href='student.html?sid=${sid}'">進入作品</button>`;
-        list.appendChild(block);
-      });
-    });
-  </script>
+  <!-- 使用者必須先選取本機的 mediaList.json -->
+  <input type="file" id="fileInput" accept=".json" />
+
+  <!-- 控制區等照常放 -->
+  <div id="controls" style="display:none;">
+    <!-- 你的原本 controls 內容 -->
+    <div style="position:absolute; top:10px; left:10px; color:#fff;">
+      <p>點擊畫面：啟動背景音樂 + 媒體輪播</p>
+      <p>輪播完所有圖片後會自動插播影片</p>
+    </div>
+    <input type="range" id="imageSlider" min="0" max="0" value="0"
+           style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:80%; z-index:20;" />
+    <label for="durationInput" style="position:absolute; top:10px; right:140px; color:#fff; z-index:20;">
+      圖片毫秒數:
+    </label>
+    <input type="number" id="durationInput" value="3000" step="500"
+           style="position:absolute; top:10px; right:10px; width:120px; z-index:20;" />
+  </div>
+
+  <!-- p5.js canvas 會插入在這裡 -->
+  <script src="p5.js/sketch.js"></script>
 </body>
 </html>

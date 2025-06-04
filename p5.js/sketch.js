@@ -18,7 +18,7 @@ let videoIndex = 0;
 const SLIDE_DURATION = 2745;
 
 // 全域倍速，任意自行調整（只要 < 32 都是真實播放；>= 32 走模擬跳過）
-const playbackSpeed = 16;
+const playbackSpeed = 1;
 
 let started = false;
 

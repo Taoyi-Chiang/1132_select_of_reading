@@ -18,7 +18,7 @@ let videoIndex = 0;
 const SLIDE_DURATION = 2745;
 
 // 全域倍速，任意自行調整（只要 < 32 都是真實播放；>= 32 走模擬跳過）
-const playbackSpeed = 1;
+const playbackSpeed = 16;
 
 let started = false;
 
@@ -65,7 +65,7 @@ function handleVideoFileSelection() {
         if (!started) {
           started = true;
           console.log(`>>> 選檔完成，自動播放最短影片 (倍速 ${playbackSpeed}×)`);
-          playInitialShortestVideo();
+          startSequence();
         }
       }
     };
@@ -80,11 +80,34 @@ function handleVideoFileSelection() {
         if (!started) {
           started = true;
           console.log(`>>> 選檔完成，自動播放最短影片 (倍速 ${playbackSpeed}×)，部分 metadata 讀取失敗`);
-          playInitialShortestVideo();
+          startSequence();
         }
       }
     };
   });
+}
+
+// 整個流程起點：播放最短影片
+function startSequence() {
+  console.log('>>> 開始新一次循環');
+  currentSlideIndex = 0;
+  audioIndex = 0;
+  videoIndex = 0;
+
+  if (slideTimer) {
+    clearInterval(slideTimer);
+    slideTimer = null;
+  }
+  if (imgElement) {
+    imgElement.remove();
+    imgElement = null;
+  }
+  if (vidElement) {
+    vidElement.remove();
+    vidElement = null;
+  }
+
+  playInitialShortestVideo();
 }
 
 // 播放最短影片，結束後接著播放投影片+音訊
@@ -256,13 +279,15 @@ function stopSlidesAndPlayRemainingVideos() {
     console.log(`>>> 播放剩餘影片，共 ${allVideos.length - 1} 支（倍速 ${playbackSpeed}×）`);
     playRemainingVideosSequentially();
   } else {
-    console.log('>>> 沒有其他影片，流程結束');
+    console.log('>>> 沒有其他影片，重啟循環');
+    startSequence();
   }
 }
 
 function playRemainingVideosSequentially() {
   if (videoIndex >= allVideos.length) {
-    console.log('>>> 所有長影片播放完畢，流程結束');
+    console.log('>>> 所有長影片播放完畢，重啟循環');
+    startSequence();
     return;
   }
   const blobURL = allVideos[videoIndex];
